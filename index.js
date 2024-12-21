@@ -1,5 +1,7 @@
 import axios from 'axios';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { links } from './db.js';
 
@@ -29,7 +31,24 @@ function extractFileId(url) {
   return match ? match[1] : null;
 }
 
-links.forEach(async (link) => {
-  const fileID = extractFileId(link);
-  await downloadFile(fileID);
-});
+function createOutputDir() {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+
+  const dirPath = path.join(__dirname, 'output');
+
+  if (fs.existsSync(dirPath)) return;
+
+  fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function main() {
+  createOutputDir();
+
+  links.forEach(async (link) => {
+    const fileID = extractFileId(link);
+    await downloadFile(fileID);
+  });
+}
+
+main();
