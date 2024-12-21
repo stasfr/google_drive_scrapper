@@ -7,13 +7,22 @@ import { links } from './db.js';
 
 async function downloadFile(fileID) {
   const url = `https://drive.usercontent.google.com/u/0/uc?id=${fileID}&export=download`;
-  console.log(url);
+
   try {
     const response = await axios({
       method: 'GET',
       url: url,
       responseType: 'stream', // Загружаем как поток данных
     });
+
+    const contentType = response.headers['content-type'];
+
+    if (contentType.includes('text/html')) {
+      console.error(
+        'Ошибка загрузки файла. Либо файла не существует, либо закрыт доступ на скачивание'
+      );
+      return;
+    }
 
     const writer = fs.createWriteStream(`output/${fileID}.pdf`);
     response.data.pipe(writer);
