@@ -5,9 +5,7 @@ import { fileURLToPath } from 'url';
 
 import { links } from './db.js';
 
-async function downloadFile(fileID) {
-  const url = `https://drive.usercontent.google.com/u/0/uc?id=${fileID}&export=download`;
-
+async function downloadFile(url, fileID) {
   try {
     const response = await axios({
       method: 'GET',
@@ -30,7 +28,7 @@ async function downloadFile(fileID) {
     writer.on('finish', () => console.log('Файл загружен!'));
     writer.on('error', (err) => console.error('Ошибка:', err));
   } catch (error) {
-    console.error('Ошибка загрузки файла:', error);
+    console.error('Ошибка загрузки файла:', error.message);
   }
 }
 
@@ -56,7 +54,16 @@ function main() {
 
   links.forEach(async (link) => {
     const fileID = extractFileId(link);
-    await downloadFile(fileID);
+
+    if (link.includes('drive.google.com')) {
+      const url = `https://drive.usercontent.google.com/u/0/uc?id=${fileID}&export=download`;
+      await downloadFile(url, fileID);
+    }
+
+    if (link.includes('docs.google.com')) {
+      const url = `https://www.googleapis.com/drive/v3/files/${fileID}/export?mimeType=application/pdf`;
+      await downloadFile(url, fileID);
+    }
   });
 }
 
