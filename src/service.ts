@@ -11,6 +11,7 @@ type ErrorParsing = {
 
 type ParsingResult = SuccessParsing | ErrorParsing;
 
+// TODO: delete this
 const test = true;
 
 export class ParserService {
@@ -51,6 +52,7 @@ export class ParserService {
     try {
       const fileID = this.extractFileId(link);
 
+      // TODO: delete this
       if (test) {
         return {
           ok: false,
