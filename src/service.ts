@@ -19,7 +19,7 @@ export class ParserService {
     try {
       const response = await fetch(url);
 
-      if (!response.ok || !response.body) {
+      if (!response.ok) {
         return `HTTP error! status: ${response.status}`;
       }
 
@@ -28,15 +28,11 @@ export class ParserService {
         return `Unexpected content type: ${contentType}`;
       }
 
-      const reader = response.body.getReader();
-      const result = await reader.read();
-      const file = result.value;
+      const buffer = await response.arrayBuffer();
 
-      if (!file) {
-        return 'File not found';
-      }
-
-      return new File([file], 'file');
+      return new File([buffer], 'file', {
+        type: response.headers.get('content-type') || 'application/pdf',
+      });
     } catch (error: unknown) {
       return String(error);
     }
