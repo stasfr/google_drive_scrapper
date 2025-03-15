@@ -11,9 +11,6 @@ type ErrorParsing = {
 
 type ParsingResult = SuccessParsing | ErrorParsing;
 
-// TODO: delete this
-const test = true;
-
 export class ParserService {
   private async downloadFile(url: string): Promise<File | string> {
     try {
@@ -44,17 +41,21 @@ export class ParserService {
     return match ? match[1] : null;
   }
 
+  private getDownloadLink(link: string, fileID: string): string | null {
+    if (link.includes('drive.google.com')) {
+      return `https://drive.usercontent.google.com/u/0/uc?id=${fileID}&export=download`;
+    }
+
+    if (link.includes('docs.google.com')) {
+      return `https://docs.google.com/presentation/d/${fileID}/export/pdf`;
+    }
+
+    return null;
+  }
+
   public async parse(link: string): Promise<ParsingResult> {
     try {
       const fileID = this.extractFileId(link);
-
-      // TODO: delete this
-      if (test) {
-        return {
-          ok: false,
-          error: 'test mode',
-        };
-      }
 
       if (!fileID) {
         return {
@@ -63,34 +64,26 @@ export class ParserService {
         };
       }
 
-      if (link.includes('drive.google.com')) {
-        const url = `https://drive.usercontent.google.com/u/0/uc?id=${fileID}&export=download`;
+      const url = this.getDownloadLink(link, fileID);
 
-        console.log('drive.google.com');
-        console.log(url);
-
-        const result = await this.downloadFile(url);
-        console.log('result', result);
-        if (typeof result === 'string') {
-          throw new Error(result);
-        }
-
+      if (!url) {
         return {
-          ok: true,
-          fileID,
-          file: result,
+          ok: false,
+          error:
+            'Unrecognized link. Link does not contain drive.google.com or docs.google.com',
         };
       }
 
-      // if (link.includes('docs.google.com')) {
-      //   const url = `https://www.googleapis.com/drive/v3/files/${fileID}/export?mimeType=application/pdf`;
-      //   console.log('docs.google.com', url);
-      //   await this.downloadFile(url, fileID);
-      // }
+      const result = await this.downloadFile(url);
+
+      if (typeof result === 'string') {
+        throw new Error(result);
+      }
 
       return {
-        ok: false,
-        error: 'Unrecognized link. Link does not contain drive.google.com.',
+        ok: true,
+        fileID,
+        file: result,
       };
     } catch (error: unknown) {
       return {
